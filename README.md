@@ -1,6 +1,6 @@
-# fizznet
+# ToRPC
 
-Fizznet is A simple Async TCP and Duplex RPC framework based on Tornado IOLoop. It's very fast and lightweight.
+ToRPC(Tornado + RPC) is A simple Async TCP and Duplex RPC framework based on Tornado IOLoop. It's very fast and lightweight.
 ## Examples
 --------
 
