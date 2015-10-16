@@ -8,10 +8,10 @@ class Services(object):
     def __init__(self):
         self._targets = {}
 
-    def route(self, pid=0):
+    def register(self, command=0):
         def decorator(f):
-            if pid:
-                _key = pid
+            if command:
+                _key = command
             else:
                 _key = f.__name__
             if _key in self._targets:
@@ -21,8 +21,9 @@ class Services(object):
 
         return decorator
 
-    def call(self, pid, *args):
-        method = self._targets.get(pid)
+    def call(self, command, *args):
+        method = self._targets.get(command)
         if not method:
-            raise NoServiceError(pid)
+            raise NoServiceError(command)
+        # print('call %s' % method.__name__)
         return method(*args)

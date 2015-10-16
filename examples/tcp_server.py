@@ -2,7 +2,7 @@
 
 from tornado import ioloop
 
-from fizznet import TcpServer, Connection
+from torpc import TcpServer, Connection
 
 
 class EchoServer(TcpServer):

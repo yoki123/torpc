@@ -3,10 +3,13 @@
 import functools
 import socket
 import struct
+import traceback
+import time
 
 import marshal as packer
 from tornado.concurrent import TracebackFuture
 
+from services import Services
 from tcp import TcpServer, Connection
 
 RPC_REQUEST = 0
@@ -16,7 +19,7 @@ RPC_REGISTER = 3  # rpc服务注册
 HEAD_LEN = struct.calcsize('!ibi')
 
 
-def _NoSyncIDGenerator():
+def _IDGenerator():
     counter = 0
     while True:
         yield counter
@@ -29,12 +32,16 @@ class RPCServerError(Exception):
     pass
 
 
+class RPCTimeOutError(Exception):
+    pass
+
+
 class RPCConnection(Connection):
     __slots__ = ('_buff', '_generator', '_request_table', 'service')
 
     def __init__(self, connection, service=None):
         self._buff = ''
-        self._generator = _NoSyncIDGenerator()
+        self._generator = _IDGenerator()
         self._request_table = {}
         self.service = service
         Connection.__init__(self, connection)
@@ -48,7 +55,7 @@ class RPCConnection(Connection):
         try:
             result = self.service.call(method_name, *args)
         except Exception, e:
-            err = str(e)
+            err = str(traceback.format_exc())
             buff = packer.dumps((err, None))
             self.write(struct.pack('!ibi', len(buff), RPC_RESPONSE, msg_id) + buff)
         else:
@@ -135,13 +142,21 @@ class RPCConnection(Connection):
             else:
                 break
 
-    def call(self, method_name, *arg):
-        msgid = next(self._generator)
+    def add_request_table(self, msg_id, future):
+        self.io_loop.add_timeout(time.time() + 60, self.message_timeout_cb, future)
+        self._request_table[msg_id] = future
+
+    def call(self, method_name, *arg, **kwargs):
+        _callback = kwargs.get('callback')
+        msg_id = next(self._generator)
         request = packer.dumps((method_name, arg))
-        buff = struct.pack('!ibi', len(request), RPC_REQUEST, msgid) + request
+        buff = struct.pack('!ibi', len(request), RPC_REQUEST, msg_id) + request
 
         future = TracebackFuture()
-        self._request_table[msgid] = future
+        self.add_request_table(msg_id, future)
+
+        if _callback:
+            future.add_done_callback(_callback)
         self.write(buff)
         return future
 
@@ -152,20 +167,30 @@ class RPCConnection(Connection):
         self.write(buff)
 
     def register(self, name, callback=None):
-        msgid = next(self._generator)
+        msg_id = next(self._generator)
         request = packer.dumps(('register', name))
-        buff = struct.pack('!ibi', len(request), RPC_REGISTER, msgid) + request
+        buff = struct.pack('!ibi', len(request), RPC_REGISTER, msg_id) + request
         future = TracebackFuture()
         if callback:
             future.add_done_callback(callback)
-        self._request_table[msgid] = future
+        self.add_request_table(msg_id, future)
         self.write(buff)
         return future
 
+    def message_timeout_cb(self, msg_id):
+        if msg_id not in self._request_table:
+            # print('not exsit, timeout?')
+            return
+        self._request_table.pop(msg_id)
+        raise RPCTimeOutError(msg_id)
+
 
 class RPCServer(TcpServer):
-    def __init__(self, address, service=None):
-        self.service = service
+    def __init__(self, address, service_cls=None):
+        if callable(service_cls):
+            self.service = service_cls()
+        else:
+            self.service = Services()
         TcpServer.__init__(self, address, RPCConnection)
 
     def on_connect(self, sock):
@@ -182,21 +207,37 @@ class RPCServer(TcpServer):
 
 
 class RPCClient(object):
-    def __init__(self, address, service=None):
+    def __init__(self, address, rpc_name, service_cls=None):
+        if callable(service_cls):
+            self.service = service_cls()
+        else:
+            self.service = Services()
+
+        self.rpc_name = rpc_name
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setblocking(0)
-        self.client = RPCConnection(sock, service)
-        self.client.set_close_callback(self.on_closed)
-        self.client.connect(address, self.on_connected)
 
-    def call(self, method_name, *arg):
-        return self.client.call(method_name, *arg)
+        self._conn = RPCConnection(sock, self.service)
+        self._conn.set_close_callback(self.on_closed)
+        self._conn.connect(address, self.on_connected)
+
+    def call(self, method_name, *arg, **kwargs):
+        return self._conn.call(method_name, *arg, **kwargs)
+
+    def notice(self, method_name, *arg):
+        return self._conn.notice(method_name, *arg)
 
     def on_connected(self):
-        pass
+        self._conn.register(self.rpc_name, self._register_callback)
+
+    def _register_callback(self, future):
+        self.on_registered()
+
+    def on_registered(self):
+        print('on_registered')
 
     def on_closed(self):
         pass
 
-    def register(self, name, callback):
-        self.client.register(name, callback)
+    def close(self):
+        self._conn.close()

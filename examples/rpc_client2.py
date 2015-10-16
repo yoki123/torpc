@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import time
-import datetime
 
+import datetime
 from tornado import ioloop, gen
-from fizznet import Services
-from fizznet import RPCClient
+
+from torpc import Services
+from torpc import RPCClient
 
 
 class MyRPCClient(RPCClient):
@@ -36,7 +37,7 @@ def benchmark_with_gen():
         counter[0] += 1
         if i == num_calls:
             print('qps = %d' % (num_calls / (time.time() - t1)))
-            rpc_client.client.close()
+            rpc_client.close()
             io_loop.stop()
 
 
@@ -47,7 +48,7 @@ def cb(future):
     counter[0] += 1
     if counter[0] == num_calls:
         print('qps = %d' % (num_calls / (time.time() - t1)))
-        rpc_client.client.close()
+        rpc_client.close()
         io_loop.stop()
     else:
         f = rpc_client.call('call_note', 'client1', 'ping')
@@ -61,16 +62,14 @@ def benchmark_with_callback():
 
 if __name__ == '__main__':
 
-    num_calls = 200000
+    num_calls = 2000
     counter = [0]
     service = Services()
 
-    rpc_client = MyRPCClient(('127.0.0.1', 5000), service)
-
-    rpc_client.client.register('client2', register_callback)
+    rpc_client = MyRPCClient(('127.0.0.1', 5000), 'client2')
 
     # benchmark_with_gen()
-    # benchmark_with_callback()
+    benchmark_with_callback()
 
     io_loop = ioloop.IOLoop.instance()
 

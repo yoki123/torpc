@@ -2,8 +2,7 @@
 
 from tornado import ioloop
 
-from fizznet import RPCServer
-from fizznet import Services
+from torpc import RPCServer
 
 
 class MyRPCServer(RPCServer):
@@ -19,17 +18,17 @@ class MyRPCServer(RPCServer):
 
 
 if __name__ == '__main__':
-    service = Services()
-
     rpc_clients = {}
 
+    server = MyRPCServer(('127.0.0.1', 5000))
 
-    @service.route()
+
+    @server.service.register()
     def sum(x, y):
         return x + y
 
 
-    @service.route()
+    @server.service.register()
     def register(conn, name):
         if name in rpc_clients:
             print('already register')
@@ -38,7 +37,7 @@ if __name__ == '__main__':
         return True
 
 
-    @service.route()
+    @server.service.register()
     def call_note(name, method_name, *arg):
         if name not in rpc_clients:
             raise Exception('note {0} not exist'.format(name))
@@ -47,11 +46,7 @@ if __name__ == '__main__':
         return future
 
 
-    server = MyRPCServer(('127.0.0.1', 5000), service)
     server.start()
-
-
-    # call_note('client', 'ping')
 
     io_loop = ioloop.IOLoop.instance()
 

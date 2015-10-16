@@ -63,8 +63,7 @@ class Connection(object):
             err = self.socket.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR)
             if err != 0:
                 print socket.error(err, os.strerror(err))
-                self.close()
-                return
+                return self.close()
 
             if self._connect_callback:
                 self._connect_callback()
@@ -74,9 +73,13 @@ class Connection(object):
             try:
                 _buf = self.socket.recv(1024)
                 if not _buf:
-                    return self.close()
-                # self._read_buffer.append(_buf)
-                self._handle_read(_buf)
+                    if self._write_buffer:
+                        self.io_loop.update_handler(self.fd, self.io_loop.WRITE)
+                    else:
+                        return self.close()
+                else:
+                    self._handle_read(_buf)
+
             except socket.error as e:
                 if e.args[0] not in _ERRNO_WOULDBLOCK:
                     print(e)

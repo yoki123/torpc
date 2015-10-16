@@ -2,7 +2,7 @@
 
 from tornado import ioloop
 
-from fizznet import TcpClient
+from torpc import TcpClient
 
 
 class MyTcpServer(TcpClient):

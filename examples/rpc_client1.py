@@ -2,8 +2,7 @@
 
 from tornado import ioloop
 
-from fizznet import RPCClient
-from fizznet import Services
+from torpc import RPCClient
 
 
 def register_callback(future):
@@ -12,17 +11,14 @@ def register_callback(future):
 
 
 if __name__ == '__main__':
-    service = Services()
+
+    rc = RPCClient(('127.0.0.1', 5000), 'client1')
 
 
-    @service.route()
+    @rc.service.register()
     def ping():
-        return 'pong from rpc client 1'
+        return 'pong from rpc client1'
 
-
-    rc = RPCClient(('127.0.0.1', 5000), service)
-
-    rc.client.register('client1', register_callback)
 
     io_loop = ioloop.IOLoop.instance()
 

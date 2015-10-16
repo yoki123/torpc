@@ -1,18 +1,24 @@
 # ToRPC
 
-ToRPC(Tornado + RPC) is A simple Async TCP and Duplex RPC framework based on Tornado IOLoop. It's very fast and lightweight.
+ToRPC(Tornado + RPC) is A simple Async TCP and Duplex RPC framework based on Tornado IOLoop. It's very fast(especially on PyPy) and lightweight.
+
+Notice: ToRPC was only tested on `CPython 2.7+` and `PyPy 1.5+` now.
+
 ## Examples
 --------
 
 ### RPC server
 ```python
-service = Services()
+from torpc import RPCServer
 
-@service.route()
+server = RPCServer(('127.0.0.1', 5000))
+
+
+@server.service.register()
 def echo(x):
     return x
-    
-server = RPCServer(('127.0.0.1', 5000), service)
+
+
 server.start()
 ```
-See more in `examples`
+See more in `examples` dir.
