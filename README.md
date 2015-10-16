@@ -21,4 +21,20 @@ def echo(x):
 
 server.start()
 ```
+
+### RPC client
+```python
+from torpc import RPCClient
+
+
+def cb(f):
+    print(f.result())
+
+rc = RPCClient(('127.0.0.1', 5000))
+
+future = rc.call('echo', 'hello world', callback=cb)
+# future.add_done_callback(cb)
+# also support tornado.gen.coroutine
+```
+
 See more in `examples` dir.

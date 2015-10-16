@@ -4,12 +4,6 @@ from tornado import ioloop
 
 from torpc import RPCClient
 
-
-def register_callback(future):
-    result = future.result()
-    print(result)
-
-
 if __name__ == '__main__':
 
     rc = RPCClient(('127.0.0.1', 5000), 'client1')

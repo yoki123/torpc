@@ -5,7 +5,7 @@ from tornado import ioloop
 from torpc import TcpClient
 
 
-class MyTcpServer(TcpClient):
+class MyTcpClient(TcpClient):
     def on_connected(self):
         self.write('hello')
 
@@ -19,7 +19,7 @@ class MyTcpServer(TcpClient):
 
 
 if __name__ == '__main__':
-    client = MyTcpServer(('127.0.0.1', 5000))
+    client = MyTcpClient(('127.0.0.1', 5000))
     client.start()
 
     io_loop = ioloop.IOLoop.instance()

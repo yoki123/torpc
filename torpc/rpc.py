@@ -82,7 +82,6 @@ class RPCConnection(Connection):
             buff = packer.dumps((err, None))
             self.write(struct.pack('!ibi', len(buff), RPC_RESPONSE, msg_id) + buff)
         else:
-
             if isinstance(result, TracebackFuture):
                 cb = functools.partial(self.result_callback, msg_id)
                 result.add_done_callback(cb)
@@ -95,6 +94,7 @@ class RPCConnection(Connection):
             print('time out?')
             return
         if err:
+            print(msg_id, err, ret)
             raise RPCServerError(err)
 
         future = self._request_table.pop(msg_id)
@@ -207,7 +207,7 @@ class RPCServer(TcpServer):
 
 
 class RPCClient(object):
-    def __init__(self, address, rpc_name, service_cls=None):
+    def __init__(self, address, rpc_name='', service_cls=None,):
         if callable(service_cls):
             self.service = service_cls()
         else:
@@ -228,7 +228,8 @@ class RPCClient(object):
         return self._conn.notice(method_name, *arg)
 
     def on_connected(self):
-        self._conn.register(self.rpc_name, self._register_callback)
+        if self.rpc_name:
+            self._conn.register(self.rpc_name, self._register_callback)
 
     def _register_callback(self, future):
         self.on_registered()
