@@ -7,6 +7,8 @@ ToRPC(Tornado + RPC) 是一个简介的基于Tornado IOLoop的异步TCP和双向
 
 ### RPC 服务器
 ```python
+from tornado import ioloop
+
 from torpc import RPCServer
 
 server = RPCServer(('127.0.0.1', 5000))
@@ -18,21 +20,40 @@ def echo(x):
 
 
 server.start()
+
+ioloop.IOLoop.instance().start()
 ```
 
 ### RPC 客户端
 ```python
+from tornado import ioloop, gen
+
 from torpc import RPCClient
 
 
-def cb(f):
+def result_callback(f):
     print(f.result())
+
+
+@gen.coroutine
+def using_gen_style():
+    want_to_say = 'way to explore'
+    ret = yield rc.call('echo', want_to_say)
+    assert ret == want_to_say
+    print('gen_style complete')
+
 
 rc = RPCClient(('127.0.0.1', 5000))
 
-future = rc.call('echo', 'hello world', callback=cb)
-# future.add_done_callback(cb)
-# 同样支持 tornado.gen.coroutine
+rc.call('echo', 'hello world', callback=result_callback)
+
+future = rc.call('echo', 'code for fun')
+future.add_done_callback(result_callback)
+
+using_gen_style()
+
+ioloop.IOLoop.instance().start()
+
 ```
 
 更多请浏览 `examples` 文件夹。

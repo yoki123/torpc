@@ -9,6 +9,8 @@ Notice: ToRPC was only tested on `CPython 2.7+` and `PyPy 1.5+` now.
 
 ### RPC server
 ```python
+from tornado import ioloop
+
 from torpc import RPCServer
 
 server = RPCServer(('127.0.0.1', 5000))
@@ -20,21 +22,39 @@ def echo(x):
 
 
 server.start()
+
+ioloop.IOLoop.instance().start()
 ```
 
 ### RPC client
-```python
+from tornado import ioloop, gen
+
 from torpc import RPCClient
 
 
-def cb(f):
+def result_callback(f):
     print(f.result())
+
+
+@gen.coroutine
+def using_gen_style():
+    want_to_say = 'way to explore'
+    ret = yield rc.call('echo', want_to_say)
+    assert ret == want_to_say
+    print('gen_style complete')
+
 
 rc = RPCClient(('127.0.0.1', 5000))
 
-future = rc.call('echo', 'hello world', callback=cb)
-# future.add_done_callback(cb)
-# also support tornado.gen.coroutine
+rc.call('echo', 'hello world', callback=result_callback)
+
+future = rc.call('echo', 'code for fun')
+future.add_done_callback(result_callback)
+
+using_gen_style()
+
+ioloop.IOLoop.instance().start()
+
 ```
 
 See more in `examples` dir.
