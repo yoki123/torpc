@@ -53,7 +53,6 @@ future.add_done_callback(result_callback)
 using_gen_style()
 
 ioloop.IOLoop.instance().start()
-
 ```
 
 更多请浏览 `examples` 文件夹。

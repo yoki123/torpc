@@ -27,6 +27,7 @@ ioloop.IOLoop.instance().start()
 ```
 
 ### RPC client
+```python
 from tornado import ioloop, gen
 
 from torpc import RPCClient
@@ -54,7 +55,6 @@ future.add_done_callback(result_callback)
 using_gen_style()
 
 ioloop.IOLoop.instance().start()
-
 ```
 
 See more in `examples` dir.
