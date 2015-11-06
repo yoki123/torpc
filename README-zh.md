@@ -70,8 +70,8 @@ ioloop.IOLoop.instance().start()
 
 environment | call coroutine(qps) | callback(qps)
 ------------|---------------------|-------------------
-Python2.7   | 39645               | 42346
-PyPy4.0     | 10162               | 12048
+Python2.7   | 10162               | 12048
+PyPy4.0     | 39645               | 42346
 
 ### 文档
 [English](https://github.com/yoki123/torpc/blob/master/README.md)

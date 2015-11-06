@@ -70,8 +70,8 @@ Memory: 8 GB 1600 MHz DDR3
 
 environment | call coroutine(qps) | callback(qps)
 ------------|---------------------|-------------------
-Python2.7   | 39645               | 42346
-PyPy4.0     | 10162               | 12048
+Python2.7   | 10162               | 12048
+PyPy4.0     | 39645               | 42346
 
 ### Document
 [中文](https://github.com/yoki123/torpc/blob/master/README-zh.md)
