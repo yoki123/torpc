@@ -10,32 +10,24 @@ Notice: ToRPC was only tested on `CPython 2.7+` and `PyPy 1.5+` now.
 ### RPC server
 ```python
 from tornado import ioloop
-
 from torpc import RPCServer
-
 server = RPCServer(('127.0.0.1', 5000))
-
 
 @server.service.register()
 def echo(x):
     return x
 
-
 server.start()
-
 ioloop.IOLoop.instance().start()
 ```
 
 ### RPC client
 ```python
 from tornado import ioloop, gen
-
 from torpc import RPCClient
-
 
 def result_callback(f):
     print(f.result())
-
 
 @gen.coroutine
 def using_gen_style():
@@ -44,28 +36,20 @@ def using_gen_style():
     assert ret == want_to_say
     print('gen_style complete')
 
-
 rc = RPCClient(('127.0.0.1', 5000))
-
 rc.call('echo', 'hello world', callback=result_callback)
-
 future = rc.call('echo', 'code for fun')
 future.add_done_callback(result_callback)
-
 using_gen_style()
-
 ioloop.IOLoop.instance().start()
 ```
 
-See more in `examples` dir.
-
+See more in [examples](https://github.com/yoki123/torpc/tree/master/examples).
 
 ### Performance
 
-OS: CentOS 6.6 x64
-
-CPU: Intel i5-3470 3.20GHz
-
+OS: CentOS 6.6 x64<br/>
+CPU: Intel i5-3470 3.20GHz<br/>
 Memory: 8 GB 1600 MHz DDR3
 
 environment | call coroutine(qps) | callback(qps)

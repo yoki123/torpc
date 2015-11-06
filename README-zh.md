@@ -10,32 +10,24 @@ ToRPC(Tornado + RPC) 是一个简介的基于Tornado IOLoop的异步TCP和双向
 ### RPC 服务器
 ```python
 from tornado import ioloop
-
 from torpc import RPCServer
-
 server = RPCServer(('127.0.0.1', 5000))
-
 
 @server.service.register()
 def echo(x):
     return x
 
-
 server.start()
-
 ioloop.IOLoop.instance().start()
 ```
 
 ### RPC 客户端
 ```python
 from tornado import ioloop, gen
-
 from torpc import RPCClient
-
 
 def result_callback(f):
     print(f.result())
-
 
 @gen.coroutine
 def using_gen_style():
@@ -44,28 +36,20 @@ def using_gen_style():
     assert ret == want_to_say
     print('gen_style complete')
 
-
 rc = RPCClient(('127.0.0.1', 5000))
-
 rc.call('echo', 'hello world', callback=result_callback)
-
 future = rc.call('echo', 'code for fun')
 future.add_done_callback(result_callback)
-
 using_gen_style()
-
 ioloop.IOLoop.instance().start()
 ```
 
-更多请浏览 `examples` 文件夹。
-
+更多请浏览[examples](https://github.com/yoki123/torpc/tree/master/examples)。
 
 ### 性能
 
-系统: CentOS 6.6 x64
-
-处理器: Intel i5-3470 3.20GHz
-
+系统: CentOS 6.6 x64<br/>
+处理器: Intel i5-3470 3.20GHz<br/>
 内存: 8 GB 1600 MHz DDR3
 
 environment | call coroutine(qps) | callback(qps)
