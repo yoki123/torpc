@@ -61,8 +61,11 @@ ioloop.IOLoop.instance().start()
 
 
 ### 性能
+
 系统: CentOS 6.6 x64
+
 处理器: Intel i5-3470 3.20GHz
+
 内存: 8 GB 1600 MHz DDR3
 
 environment | call coroutine(qps) | callback(qps)
