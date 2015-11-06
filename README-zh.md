@@ -1,7 +1,9 @@
 # ToRPC
+
 ToRPC(Tornado + RPC) 是一个简介的基于Tornado IOLoop的异步TCP和双向RPC框架。ToRPC速度非常快（尤其是在PyPy环境下）和轻量级。
 
 注意：现在ToRPC只在`CPython 2.7+` 和 `PyPy 1.5+`测试过。
+
 ## 示例
 --------
 
@@ -56,3 +58,17 @@ ioloop.IOLoop.instance().start()
 ```
 
 更多请浏览 `examples` 文件夹。
+
+
+### 性能
+系统: CentOS 6.6 x64
+处理器: Intel i5-3470 3.20GHz
+内存: 8 GB 1600 MHz DDR3
+
+environment | call coroutine(qps) | callback(qps)
+------------|---------------------|-------------------
+Python2.7   | 39645               | 42346
+PyPy4.0     | 10162               | 12048
+
+### 文档
+[English](https://github.com/yoki123/torpc/blob/master/README.md)

@@ -3,19 +3,23 @@
 import functools
 import socket
 import struct
-import traceback
 import time
+import logging
 
+import traceback
 import marshal as packer
+
 from tornado.concurrent import TracebackFuture
 
 from services import Services
 from tcp import TcpServer, Connection
 
+logger = logging.getLogger(__name__)
+
 RPC_REQUEST = 0
 RPC_RESPONSE = 1
 RPC_NOTICE = 2
-RPC_REGISTER = 3  # rpc服务注册
+RPC_REGISTER = 3  # just for duplex rpc service
 HEAD_LEN = struct.calcsize('!ibi')
 
 
@@ -71,14 +75,14 @@ class RPCConnection(Connection):
         try:
             self.service.call(method_name, *args)
         except Exception, e:
-            print(e)
+            logger.error(str(e))
 
     def handle_rpc_register(self, msg_id, method_name, args):
         try:
             result = self.service.call(method_name, self, args)
         except Exception, e:
             err = str(e)
-            print(err)
+            logger.debug(err)
             buff = packer.dumps((err, None))
             self.write(struct.pack('!ibi', len(buff), RPC_RESPONSE, msg_id) + buff)
         else:
@@ -91,10 +95,10 @@ class RPCConnection(Connection):
 
     def handle_rpc_response(self, msg_id, err, ret):
         if msg_id not in self._request_table:
-            print('time out?')
+            logger.debug('response time out?')
             return
         if err:
-            print(msg_id, err, ret)
+            logger.debug('{0} {1} {2}'.format(msg_id, err, ret))
             raise RPCServerError(err)
 
         future = self._request_table.pop(msg_id)
@@ -104,7 +108,7 @@ class RPCConnection(Connection):
         self.on_receive(data)
 
     def on_receive(self, data):
-        # 黏包
+        # sticky package
         self._buff += data
         _cur_len = len(self._buff)
 
@@ -114,14 +118,16 @@ class RPCConnection(Connection):
             if _cur_len - HEAD_LEN >= data_length:
                 request = self._buff[HEAD_LEN:HEAD_LEN + data_length]
 
-                # 拆包
-                self._buff = self._buff[HEAD_LEN + data_length:]  # 拆包之后，可能有剩余部分
+                # split package;
+                # next package data in this package tail.
+                self._buff = self._buff[HEAD_LEN + data_length:]
+
                 _cur_len = len(self._buff)
 
                 try:
                     req = packer.loads(request)
                 except Exception, e:
-                    print(e)
+                    logger.debug(str(e))
                     return
 
                 if msg_type == RPC_REQUEST:
@@ -179,26 +185,29 @@ class RPCConnection(Connection):
 
     def message_timeout_cb(self, msg_id):
         if msg_id not in self._request_table:
-            # print('not exsit, timeout?')
+            logger.debug('not exsit, timeout?')
             return
         self._request_table.pop(msg_id)
         raise RPCTimeOutError(msg_id)
 
 
 class RPCServer(TcpServer):
-    def __init__(self, address, service_cls=None):
+    def __init__(self, address, service_cls=None, set_keep_alive=False):
         if callable(service_cls):
             self.service = service_cls()
         else:
             self.service = Services()
-        TcpServer.__init__(self, address, RPCConnection)
+        TcpServer.__init__(self, address, RPCConnection, set_keep_alive)
 
     def on_connect(self, sock):
         sock.setblocking(0)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-        # connection.setsockopt(socket.SOL_TCP, socket.TCP_KEEPIDLE, 60)
-        # connection.setsockopt(socket.SOL_TCP, socket.TCP_KEEPINTVL, 5)
-        # connection.setsockopt(socket.SOL_TCP, socket.TCP_KEEPCNT, 20)
+
+        # set keepalive
+        if self._set_keep_alive:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+            sock.setsockopt(socket.SOL_TCP, socket.TCP_KEEPIDLE, 60)
+            sock.setsockopt(socket.SOL_TCP, socket.TCP_KEEPINTVL, 5)
+            sock.setsockopt(socket.SOL_TCP, socket.TCP_KEEPCNT, 20)
 
         conn = self._build_class(sock, self.service)
         close_callback = functools.partial(self.on_close, conn)
@@ -207,7 +216,7 @@ class RPCServer(TcpServer):
 
 
 class RPCClient(object):
-    def __init__(self, address, rpc_name='', service_cls=None,):
+    def __init__(self, address, rpc_name='', service_cls=None):
         if callable(service_cls):
             self.service = service_cls()
         else:
@@ -235,7 +244,7 @@ class RPCClient(object):
         self.on_registered()
 
     def on_registered(self):
-        print('on_registered')
+        logger.debug('on_registered')
 
     def on_closed(self):
         pass

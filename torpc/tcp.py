@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 
-import os
 import socket
 import errno
 import collections
 import functools
+import logging
 
+import os
 from tornado import ioloop
 
 _ERRNO_WOULDBLOCK = (errno.EAGAIN, errno.EWOULDBLOCK)
 _ERRNO_INPROGRESS = (errno.EINPROGRESS,)
+logger = logging.getLogger(__name__)
 
 
 class ConnectionClosedError(IOError):
@@ -42,7 +44,7 @@ class Connection(object):
     def read_util_close(self, read_callback=None):
         self._read_callback = read_callback
         if self._added_handler:
-            # 目前只有read_util_close 和connect 两个函数会调用 add_handler， 那么...只可能有READ和WRITE两个时间
+            # only read_util_close and read_util_close will call add_handler, so, only READ and WRITE event.
             self.io_loop.update_handler(self.fd, self.io_loop.READ | self.io_loop.WRITE)
         else:
             self.io_loop.add_handler(self.fd, self._handle_events, self.io_loop.READ)
@@ -62,7 +64,7 @@ class Connection(object):
         if self._connecting:
             err = self.socket.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR)
             if err != 0:
-                print socket.error(err, os.strerror(err))
+                logger.debug('{0} {1}'.format(err, os.strerror(err)))
                 return self.close()
 
             if self._connect_callback:
@@ -82,7 +84,7 @@ class Connection(object):
 
             except socket.error as e:
                 if e.args[0] not in _ERRNO_WOULDBLOCK:
-                    print(e)
+                    logger.debug(str(e))
                     return self.close()
 
         if events & self.io_loop.WRITE:
@@ -96,12 +98,12 @@ class Connection(object):
                 self.io_loop.update_handler(self.fd, self.io_loop.READ)
             except socket.error as e:
                 if e.args[0] not in _ERRNO_WOULDBLOCK:
-                    print(e)
+                    logger.debug(str(e))
                     return self.close()
 
         if events & self.io_loop.ERROR:
             err = self.socket.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR)
-            print(err)
+            logger.warning(str(err))
             self.close()
 
     def close(self):
@@ -123,7 +125,7 @@ class Connection(object):
         except socket.error as e:
             if e.args[0] not in _ERRNO_WOULDBLOCK and \
                             e.args[0] not in _ERRNO_INPROGRESS:
-                print(e)
+                logger.debug(str(e))
                 self.close()
 
         if self._added_handler:
@@ -134,9 +136,10 @@ class Connection(object):
 
 
 class TcpServer(object):
-    def __init__(self, address, build_class):
+    def __init__(self, address, build_class, set_keep_alive=False):
         self._address = address
         self._build_class = build_class
+        self._set_keep_alive = set_keep_alive
 
     def accept_handler(self, sock, fd, events):
         while True:
@@ -153,10 +156,11 @@ class TcpServer(object):
         sock.setblocking(0)
 
         # set keepalive
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-        # connection.setsockopt(socket.SOL_TCP, socket.TCP_KEEPIDLE, 60)
-        # connection.setsockopt(socket.SOL_TCP, socket.TCP_KEEPINTVL, 5)
-        # connection.setsockopt(socket.SOL_TCP, socket.TCP_KEEPCNT, 20)
+        if self._set_keep_alive:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+            sock.setsockopt(socket.SOL_TCP, socket.TCP_KEEPIDLE, 60)
+            sock.setsockopt(socket.SOL_TCP, socket.TCP_KEEPINTVL, 5)
+            sock.setsockopt(socket.SOL_TCP, socket.TCP_KEEPCNT, 20)
 
         conn = self._build_class(sock)
         close_callback = functools.partial(self.on_close, conn)

@@ -58,3 +58,18 @@ ioloop.IOLoop.instance().start()
 ```
 
 See more in `examples` dir.
+
+
+### Performance
+
+OS: CentOS 6.6 x64
+CPU: Intel i5-3470 3.20GHz
+Memory: 8 GB 1600 MHz DDR3
+
+environment | call coroutine(qps) | callback(qps)
+------------|---------------------|-------------------
+Python2.7   | 39645               | 42346
+PyPy4.0     | 10162               | 12048
+
+### Document
+[ÖÐÎÄ](https://github.com/yoki123/torpc/blob/master/README-zh.md)
