@@ -60,13 +60,13 @@ Memory: 8 GB 1600 MHz DDR3
 </tr>
 <tr>
     <td>Python2.7.10</td>
-    <td>10162</td>
-    <td>12048</td>
+    <td>9842</td>
+    <td>11614</td>
 </tr>
 <tr>
     <td>PyPy4.0.0(50W loops)</td>
-    <td>42629</td>
-    <td>45142</td>
+    <td>40486</td>
+    <td>41225</td>
 </tr>
 </table>
 

@@ -40,7 +40,7 @@ if __name__ == '__main__':
     @server.service.register()
     def call_node(name, method_name, *arg):
         if name not in rpc_clients:
-            raise Exception('note {0} not exist'.format(name))
+            raise Exception('node {0} not exist'.format(name))
         node = rpc_clients[name]
         future = node.call(method_name, *arg)
         return future

@@ -7,7 +7,7 @@ import time
 import logging
 
 import traceback
-import marshal as packer
+import msgpack as packer
 
 from tornado.concurrent import TracebackFuture
 
