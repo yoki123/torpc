@@ -64,11 +64,23 @@ ioloop.IOLoop.instance().start()
     <td>11614</td>
 </tr>
 <tr>
-    <td>PyPy4.0.0(50W loops)</td>
+    <td>Python2.7.10(without timeout)</td>
+    <td>13192</td>
+    <td>16638</td>
+</tr>
+<tr>
+    <td>PyPy4.0.0</td>
     <td>40486</td>
     <td>41225</td>
 </tr>
+<tr>
+    <td>PyPy4.0.0(without timeout)</td>
+    <td>53252</td>
+    <td>59151</td>
+</tr>
 </table>
+
+这个基准测试中，Python循环10w次，PyPy循环50w次，然后运行3次, 结果在 [gist:benchmark_result.txt](https://gist.github.com/yoki123/c6f8a9c4f375f61359e2)
 
 ### 文档
 [English](https://github.com/yoki123/torpc/blob/master/README.md)

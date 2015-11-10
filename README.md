@@ -64,11 +64,23 @@ Memory: 8 GB 1600 MHz DDR3
     <td>11614</td>
 </tr>
 <tr>
-    <td>PyPy4.0.0(50W loops)</td>
+    <td>Python2.7.10(without timeout)</td>
+    <td>13192</td>
+    <td>16638</td>
+</tr>
+<tr>
+    <td>PyPy4.0.0</td>
     <td>40486</td>
     <td>41225</td>
 </tr>
+<tr>
+    <td>PyPy4.0.0(without timeout)</td>
+    <td>53252</td>
+    <td>59151</td>
+</tr>
 </table>
+
+In this benchmark, Python loops 10w times and PyPy loops 50w times, then run 3 times of each, the result is on [gist:benchmark_result.txt](https://gist.github.com/yoki123/c6f8a9c4f375f61359e2)
 
 ### Document
 [中文](https://github.com/yoki123/torpc/blob/master/README-zh.md)
