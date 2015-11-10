@@ -5,8 +5,8 @@ import errno
 import collections
 import functools
 import logging
-
 import os
+
 from tornado import ioloop
 
 _ERRNO_WOULDBLOCK = (errno.EAGAIN, errno.EWOULDBLOCK)
@@ -136,12 +136,13 @@ class Connection(object):
 
 
 class TcpServer(object):
-    def __init__(self, address, build_class, set_keep_alive=False):
+    def __init__(self, address, build_class, set_keep_alive=False, **build_kwargs):
         self._address = address
         self._build_class = build_class
         self._set_keep_alive = set_keep_alive
+        self._build_kwargs = build_kwargs
 
-    def accept_handler(self, sock, fd, events):
+    def _accept_handler(self, sock, fd, events):
         while True:
             try:
                 connection, address = sock.accept()
@@ -150,9 +151,9 @@ class TcpServer(object):
                     raise
                 return
 
-            self.on_connect(connection)
+            self._handle_connect(connection)
 
-    def on_connect(self, sock):
+    def _handle_connect(self, sock):
         sock.setblocking(0)
 
         # set keepalive
@@ -162,7 +163,8 @@ class TcpServer(object):
             sock.setsockopt(socket.SOL_TCP, socket.TCP_KEEPINTVL, 5)
             sock.setsockopt(socket.SOL_TCP, socket.TCP_KEEPCNT, 20)
 
-        conn = self._build_class(sock)
+        conn = self._build_class(sock, **self._build_kwargs)
+        self.on_connect(conn)
         close_callback = functools.partial(self.on_close, conn)
         conn.set_close_callback(close_callback)
 
@@ -177,7 +179,7 @@ class TcpServer(object):
         sock.listen(backlog)
 
         io_loop = ioloop.IOLoop.instance()
-        callback = functools.partial(self.accept_handler, sock)
+        callback = functools.partial(self._accept_handler, sock)
         io_loop.add_handler(sock.fileno(), callback, io_loop.READ)
 
     def handle_stream(self, conn, buff):
@@ -186,12 +188,14 @@ class TcpServer(object):
     def on_close(self, conn):
         pass
 
+    def on_connect(self, conn):
+        pass
+
 
 class TcpClient(object):
     def __init__(self, address):
         self.conn = None
         self._address = address
-        self._request_table = {}
 
     def start(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)

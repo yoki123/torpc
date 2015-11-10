@@ -5,13 +5,12 @@ Maybe this isn't a benchmark, just a test for torpc only now.
 
 import time
 import sys
+
 sys.path.append('../')
 
 from multiprocessing import Process
 from tornado import ioloop, gen
 from torpc import RPCServer, RPCClient
-
-
 
 
 def rpc_server_entry():

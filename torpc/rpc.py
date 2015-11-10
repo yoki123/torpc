@@ -5,8 +5,8 @@ import socket
 import struct
 import time
 import logging
-
 import traceback
+
 import msgpack as packer
 
 from tornado.concurrent import TracebackFuture
@@ -41,12 +41,13 @@ class RPCTimeOutError(Exception):
 
 
 class RPCConnection(Connection):
-    __slots__ = ('_buff', '_generator', '_request_table', 'service')
+    __slots__ = ('_buff', '_generator', '_request_table', '_request_timeout', 'service')
 
-    def __init__(self, connection, service=None):
+    def __init__(self, connection, service=None, request_timeout=0):
         self._buff = ''
         self._generator = _IDGenerator()
         self._request_table = {}
+        self._request_timeout = request_timeout
         self.service = service
         Connection.__init__(self, connection)
 
@@ -149,7 +150,8 @@ class RPCConnection(Connection):
                 break
 
     def add_request_table(self, msg_id, future):
-        self.io_loop.add_timeout(time.time() + 60, self.message_timeout_cb, future)
+        if self._request_timeout:
+            self.io_loop.add_timeout(time.time() + self._request_timeout, self.message_timeout_cb, future)
         self._request_table[msg_id] = future
 
     def call(self, method_name, *arg, **kwargs):
@@ -192,14 +194,14 @@ class RPCConnection(Connection):
 
 
 class RPCServer(TcpServer):
-    def __init__(self, address, service_cls=None, set_keep_alive=False):
+    def __init__(self, address, service_cls=None, set_keep_alive=False, request_timeout=0):
         if callable(service_cls):
             self.service = service_cls()
         else:
             self.service = Services()
-        TcpServer.__init__(self, address, RPCConnection, set_keep_alive)
+        TcpServer.__init__(self, address, RPCConnection, set_keep_alive, request_timeout=request_timeout)
 
-    def on_connect(self, sock):
+    def _handle_connect(self, sock):
         sock.setblocking(0)
 
         # set keepalive
@@ -216,7 +218,7 @@ class RPCServer(TcpServer):
 
 
 class RPCClient(object):
-    def __init__(self, address, rpc_name='', service_cls=None):
+    def __init__(self, address, rpc_name='', service_cls=None, request_timeout=0):
         if callable(service_cls):
             self.service = service_cls()
         else:
@@ -226,7 +228,7 @@ class RPCClient(object):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setblocking(0)
 
-        self._conn = RPCConnection(sock, self.service)
+        self._conn = RPCConnection(sock, self.service, request_timeout)
         self._conn.set_close_callback(self.on_closed)
         self._conn.connect(address, self.on_connected)
 
