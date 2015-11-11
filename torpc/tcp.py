@@ -183,13 +183,13 @@ class TcpServer(object):
         io_loop.add_handler(sock.fileno(), callback, io_loop.READ)
 
     def handle_stream(self, conn, buff):
-        pass
+        logger.debug('handle_stream')
 
     def on_close(self, conn):
-        pass
+        logger.debug('on_close')
 
     def on_connect(self, conn):
-        pass
+        logger.debug('on_connect')
 
 
 class TcpClient(object):
@@ -206,16 +206,16 @@ class TcpClient(object):
         self.conn.read_util_close(self.on_receive)
 
     def on_connected(self):
-        pass
+        logger.debug('on_connected')
 
     def write(self, buf):
         self.conn.write(buf)
 
     def on_receive(self, buf):
-        pass
+        logger.debug('on_receive')
 
     def on_close(self):
-        pass
+        logger.debug('on_close')
 
     def close(self):
         self.conn.close()

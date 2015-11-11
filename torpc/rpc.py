@@ -249,7 +249,40 @@ class RPCClient(object):
         logger.debug('on_registered')
 
     def on_closed(self):
-        pass
+        logger.debug('on_closed')
 
     def close(self):
         self._conn.close()
+
+
+class DuplexRPCServer(RPCServer):
+    def __init__(self, address, service_cls=None, set_keep_alive=False, request_timeout=0):
+        self.rpc_clients = {}
+        RPCServer.__init__(self, address, service_cls=service_cls, set_keep_alive=set_keep_alive,
+                           request_timeout=request_timeout)
+        self.service.dispatch('register', self._rpc_register)
+        self.service.dispatch('call_node', self.call_node)
+
+    def on_close(self, conn):
+        _node_name = None
+        for _name, _conn in self.rpc_clients.iteritems():
+            if _conn == conn:
+                _node_name = _name
+                break
+        if _node_name:
+            self.rpc_clients.pop(_node_name)
+            logger.debug('%s disconnect' % _node_name)
+
+    def call_node(self, name, method_name, *arg):
+        if name not in self.rpc_clients:
+            raise Exception('node {0} not exist'.format(name))
+        node = self.rpc_clients[name]
+        future = node.call(method_name, *arg)
+        return future
+
+    def _rpc_register(self, conn, name):
+        if name in self.rpc_clients:
+            logger.warning('%s already register' % name)
+            return False
+        self.rpc_clients[name] = conn
+        return True

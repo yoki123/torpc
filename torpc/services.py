@@ -8,6 +8,11 @@ class Services(object):
     def __init__(self):
         self._targets = {}
 
+    def dispatch(self, key, func):
+        if key in self._targets:
+            raise KeyError(key)
+        self._targets[key] = func
+
     def register(self, command=0):
         def decorator(f):
             if command:
@@ -25,5 +30,4 @@ class Services(object):
         method = self._targets.get(command)
         if not method:
             raise NoServiceError(command)
-        # print('call %s' % method.__name__)
         return method(*args)
