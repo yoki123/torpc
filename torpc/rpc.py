@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import functools
-import socket
 import struct
 import time
 import logging
@@ -12,7 +11,8 @@ import msgpack as packer
 from tornado.concurrent import TracebackFuture
 
 from services import Services
-from tcp import TcpServer, Connection
+from torpc.tcp import TcpServer, Connection
+from torpc.util import set_keepalive, auto_build_socket
 
 logger = logging.getLogger(__name__)
 
@@ -82,8 +82,7 @@ class RPCConnection(Connection):
         try:
             result = self.service.call(method_name, self, args)
         except Exception, e:
-            err = str(e)
-            logger.debug(err)
+            err = str(traceback.format_exc())
             buff = packer.dumps((err, None))
             self.write(struct.pack('!ibi', len(buff), RPC_RESPONSE, msg_id) + buff)
         else:
@@ -206,14 +205,16 @@ class RPCServer(TcpServer):
 
         # set keepalive
         if self._set_keep_alive:
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-            sock.setsockopt(socket.SOL_TCP, socket.TCP_KEEPIDLE, 60)
-            sock.setsockopt(socket.SOL_TCP, socket.TCP_KEEPINTVL, 5)
-            sock.setsockopt(socket.SOL_TCP, socket.TCP_KEEPCNT, 20)
+            set_keepalive(sock)
 
-        conn = self._build_class(sock, self.service)
+        conn = self._build_class(sock, self.service, **self._build_kwargs)
+        self.on_connect(conn)
+
         close_callback = functools.partial(self.on_close, conn)
         conn.set_close_callback(close_callback)
+
+    def on_connect(self, conn):
+        logger.debug('on_connect: %s' % repr(conn.getaddress()))
         conn.read_util_close(conn.on_receive)
 
 
@@ -225,8 +226,8 @@ class RPCClient(object):
             self.service = Services()
 
         self.rpc_name = rpc_name
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.setblocking(0)
+
+        sock = auto_build_socket(address)
 
         self._conn = RPCConnection(sock, self.service, request_timeout)
         self._conn.set_close_callback(self.on_closed)
@@ -243,13 +244,18 @@ class RPCClient(object):
             self._conn.register(self.rpc_name, self._register_callback)
 
     def _register_callback(self, future):
-        self.on_registered()
+        ret = future.result()
+        if not ret:
+            logger.warning("register failed")
+            return
+        self.on_registered(ret)
 
-    def on_registered(self):
+    def on_registered(self, ret):
         logger.debug('on_registered')
 
     def on_closed(self):
         logger.debug('on_closed')
+        self._conn.io_loop.stop()
 
     def close(self):
         self._conn.close()
@@ -285,4 +291,8 @@ class DuplexRPCServer(RPCServer):
             logger.warning('%s already register' % name)
             return False
         self.rpc_clients[name] = conn
+        self.on_registered(name, conn)
         return True
+
+    def on_registered(self, name, conn):
+        logger.debug('%s registered ' % name)

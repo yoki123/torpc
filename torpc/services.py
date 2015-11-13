@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import logging
+logger = logging.getLogger(__name__)
+
 class NoServiceError(Exception):
     pass
 
@@ -30,4 +33,5 @@ class Services(object):
         method = self._targets.get(command)
         if not method:
             raise NoServiceError(command)
+        logger.debug('call method %s' % method.__name__)
         return method(*args)

@@ -12,9 +12,11 @@ from multiprocessing import Process
 from tornado import ioloop, gen
 from torpc import RPCServer, RPCClient
 
+rpc_address = ('127.0.0.1', 5000)  # '/tmp/torpc.sock'
+
 
 def rpc_server_entry():
-    server = RPCServer(('127.0.0.1', 5000))
+    server = RPCServer(rpc_address)
 
     @server.service.register()
     def sum(x, y):
@@ -59,9 +61,9 @@ if __name__ == '__main__':
     time_start = time.clock()
 
     io_loop = ioloop.IOLoop.instance()
-    rpc_client = RPCClient(('127.0.0.1', 5000))
+    rpc_client = RPCClient(rpc_address)
 
-    async_coroutine()
+    # async_coroutine()
 
     rpc_client.call("sum", 1, 2, callback=async_callback)
 

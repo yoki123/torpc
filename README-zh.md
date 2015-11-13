@@ -50,7 +50,9 @@ ioloop.IOLoop.instance().start()
 
 系统: CentOS 6.6 x64<br/>
 处理器: Intel i5-3470 3.20GHz<br/>
-内存: 8 GB 1600 MHz DDR3
+内存: 8 GB 1600 MHz DDR3<br/>
+Python: 2.7.10<br/>
+PyPy: 4.0.0
 
 <table>
 <tr>
@@ -59,24 +61,29 @@ ioloop.IOLoop.instance().start()
     <td>callback(qps)</td>
 </tr>
 <tr>
-    <td>Python2.7.10</td>
+    <td>Python(with timeout)</td>
     <td>9842</td>
     <td>11614</td>
 </tr>
 <tr>
-    <td>Python2.7.10(without timeout)</td>
+    <td>Python</td>
     <td>13192</td>
     <td>16638</td>
 </tr>
 <tr>
-    <td>PyPy4.0.0</td>
+    <td>PyPy(with timeout)</td>
     <td>40486</td>
     <td>41225</td>
 </tr>
 <tr>
-    <td>PyPy4.0.0(without timeout)</td>
+    <td>PyPy</td>
     <td>53252</td>
     <td>59151</td>
+</tr>
+<tr>
+    <td>PyPy(unix domain)</td>
+    <td>67100</td>
+    <td>74362</td>
 </tr>
 </table>
 

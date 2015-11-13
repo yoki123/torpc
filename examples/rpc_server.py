@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
 
+import sys
+
+sys.path.append('../')
+
 from tornado import ioloop
 
+from example_utils import log_initialize
 from torpc import DuplexRPCServer
 
 if __name__ == '__main__':
-
+    log_initialize()
     server = DuplexRPCServer(('127.0.0.1', 5000))
 
 

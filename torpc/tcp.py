@@ -8,6 +8,7 @@ import logging
 import os
 
 from tornado import ioloop
+from torpc.util import set_keepalive, auto_build_socket, build_listener
 
 _ERRNO_WOULDBLOCK = (errno.EAGAIN, errno.EWOULDBLOCK)
 _ERRNO_INPROGRESS = (errno.EINPROGRESS,)
@@ -37,6 +38,9 @@ class Connection(object):
         self._connect_callback = None
         self._read_callback = None
         self._close_callback = None
+
+    def getaddress(self):
+        return self.socket.getpeername()
 
     def set_close_callback(self, close_callback):
         self._close_callback = close_callback
@@ -158,25 +162,16 @@ class TcpServer(object):
 
         # set keepalive
         if self._set_keep_alive:
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-            sock.setsockopt(socket.SOL_TCP, socket.TCP_KEEPIDLE, 60)
-            sock.setsockopt(socket.SOL_TCP, socket.TCP_KEEPINTVL, 5)
-            sock.setsockopt(socket.SOL_TCP, socket.TCP_KEEPCNT, 20)
+            set_keepalive(sock)
 
         conn = self._build_class(sock, **self._build_kwargs)
         self.on_connect(conn)
+
         close_callback = functools.partial(self.on_close, conn)
         conn.set_close_callback(close_callback)
 
-        handle_receive = functools.partial(self.handle_stream, conn)
-        conn.read_util_close(handle_receive)
-
     def start(self, backlog=0):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.setblocking(0)
-        sock.bind(self._address)
-        sock.listen(backlog)
+        sock = build_listener(self._address)
 
         io_loop = ioloop.IOLoop.instance()
         callback = functools.partial(self._accept_handler, sock)
@@ -189,7 +184,11 @@ class TcpServer(object):
         logger.debug('on_close')
 
     def on_connect(self, conn):
-        logger.debug('on_connect')
+
+        logger.debug('on_connect: %s' % repr(conn.getaddress()))
+
+        handle_receive = functools.partial(self.handle_stream, conn)
+        conn.read_util_close(handle_receive)
 
 
 class TcpClient(object):
@@ -198,8 +197,7 @@ class TcpClient(object):
         self._address = address
 
     def start(self):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
-        sock.setblocking(0)
+        sock = auto_build_socket(self._address)
         self.conn = Connection(sock)
         self.conn.set_close_callback(self.on_close)
         self.conn.connect(self._address, self.on_connected)
