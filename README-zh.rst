@@ -1,15 +1,15 @@
 ToRPC
 =====
 
-ToRPC(Tornado + RPC) ÊÇÒ»¸öµÄ»ùÓÚTornado
-IOLoopµÄÒì²½TCPºÍË«ÏòÍ¨ÐÅµÄRPCµÄPythonÊµÏÖ¡£ToRPC·Ç³£ÇáÁ¿¼¶£¬ÐÔÄÜÓÅÐã£¨ÓÈÆäÊÇÔÚPyPy»·¾³ÏÂ£©¡£
+ToRPC(Tornado + RPC) æ˜¯ä¸€ä¸ªçš„åŸºäºŽTornado
+IOLoopçš„å¼‚æ­¥TCPå’ŒåŒå‘é€šä¿¡çš„RPCçš„Pythonå®žçŽ°ã€‚ToRPCéžå¸¸è½»é‡çº§ï¼Œæ€§èƒ½ä¼˜ç§€ï¼ˆå°¤å…¶æ˜¯åœ¨PyPyçŽ¯å¢ƒä¸‹ï¼‰ã€‚
 
-×¢Òâ£ºÄ¿Ç°ÎªÖ¹£¬ToRPCÖ»ÔÚ\ ``CPython 2.7+`` ºÍ ``PyPy 2.5+``\ ÉÏ²âÊÔ¹ý¡£
+æ³¨æ„ï¼šç›®å‰ä¸ºæ­¢ï¼ŒToRPCåªåœ¨\ ``CPython 2.7+`` å’Œ ``PyPy 2.5+``\ ä¸Šæµ‹è¯•è¿‡ã€‚
 
-Ê¾Àý
+ç¤ºä¾‹
 -------
 
-RPC ·þÎñÆ÷
+RPC æœåŠ¡å™¨
 ~~~~~~~~~~
 
 .. code:: python
@@ -25,7 +25,7 @@ RPC ·þÎñÆ÷
     server.start()
     ioloop.IOLoop.instance().start()
 
-RPC ¿Í»§¶Ë
+RPC å®¢æˆ·ç«¯
 ~~~~~~~~~~
 
 .. code:: python
@@ -50,14 +50,14 @@ RPC ¿Í»§¶Ë
     using_gen_style()
     ioloop.IOLoop.instance().start()
 
-¸ü¶àÇëä¯ÀÀ\ `examples`_\ ¡£
+æ›´å¤šè¯·æµè§ˆ\ `examples`_\ ã€‚
 
 Performance
 ~~~~~~~~~~~
 
-ÏµÍ³: CentOS 6.6 x64
-´¦ÀíÆ÷: Intel i5-3470 3.20GHz
-ÄÚ´æ: 8 GB 1600 MHz DDR3
+ç³»ç»Ÿ: CentOS 6.6 x64
+å¤„ç†å™¨: Intel i5-3470 3.20GHz
+å†…å­˜: 8 GB 1600 MHz DDR3
 Python: 2.7.10
 PyPy: 4.0.0
 
@@ -75,10 +75,10 @@ PyPy: 4.0.0
 | PyPy(unix domain)    | 67100               | 74362         |
 +----------------------+---------------------+---------------+
 
-Õâ¸ö»ù×¼²âÊÔÖÐ£¬PythonÑ­»·10w´Î£¬PyPyÑ­»·50w´Î£¬È»ºóÔËÐÐ3´Î, ½á¹ûÔÚ
+è¿™ä¸ªåŸºå‡†æµ‹è¯•ä¸­ï¼ŒPythonå¾ªçŽ¯10wæ¬¡ï¼ŒPyPyå¾ªçŽ¯50wæ¬¡ï¼Œç„¶åŽè¿è¡Œ3æ¬¡, ç»“æžœåœ¨
 `gist:benchmark\_result.txt`_
 
-ÎÄµµ
+æ–‡æ¡£
 ~~~~
 
 `English`_

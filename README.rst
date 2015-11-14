@@ -2,7 +2,7 @@ ToRPC
 =====
 
 ToRPC(Tornado + RPC) is a tiny tcp and duplex RPC implementation in
-Python based on Tornado IOLoop. It’s very lightweight and high
+Python based on Tornado IOLoop. It鈥檚 very lightweight and high
 performance(especially on PyPy).
 
 Notice: ToRPC was only tested on ``CPython 2.7+`` and ``PyPy 2.5+``
@@ -83,8 +83,8 @@ then run 3 times of each, the result is on `gist:benchmark\_result.txt`_
 Document
 ~~~~~~~~
 
-`中文`_
+`涓枃`_
 
 .. _examples: https://github.com/yoki123/torpc/tree/master/examples
 .. _`gist:benchmark\_result.txt`: https://gist.github.com/yoki123/c6f8a9c4f375f61359e2
-.. _中文: https://github.com/yoki123/torpc/blob/master/README-zh.rst
+.. _涓枃: https://github.com/yoki123/torpc/blob/master/README-zh.rst
