@@ -8,7 +8,7 @@ performance(especially on PyPy).
 Notice: ToRPC was only tested on ``CPython 2.7+`` and ``PyPy 2.5+``
 until now.
 
-## Examples
+Examples
 -----------
 
 RPC server
@@ -57,11 +57,12 @@ See more in `examples`_.
 Performance
 ~~~~~~~~~~~
 
-OS: CentOS 6.6 x64
-CPU: Intel i5-3470 3.20GHz
-Memory: 8 GB 1600 MHz DDR3
-Python: 2.7.10
-PyPy: 4.0.0
+| OS: CentOS 6.6 x64
+| CPU: Intel i5-3470 3.20GHz
+| Memory: 8 GB 1600 MHz DDR3
+| Python: 2.7.10
+| PyPy: 4.0.0
+
 
 +----------------------+---------------------+---------------+
 | environment          | call coroutine(qps) | callback(qps) |

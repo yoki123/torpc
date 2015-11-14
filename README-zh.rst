@@ -55,11 +55,11 @@ RPC 客户端
 Performance
 ~~~~~~~~~~~
 
-系统: CentOS 6.6 x64
-处理器: Intel i5-3470 3.20GHz
-内存: 8 GB 1600 MHz DDR3
-Python: 2.7.10
-PyPy: 4.0.0
+| 系统: CentOS 6.6 x64
+| 处理器: Intel i5-3470 3.20GHz
+| 内存: 8 GB 1600 MHz DDR3
+| Python: 2.7.10
+  PyPy: 4.0.0
 
 +----------------------+---------------------+---------------+
 | environment          | call coroutine(qps) | callback(qps) |
