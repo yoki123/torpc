@@ -1,0 +1,5 @@
+build
+dist
+torpc.egg-info
+*.pyc
+*.swp
