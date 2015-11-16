@@ -46,6 +46,8 @@ def async_coroutine():
         # ret = yield gen.with_timeout(time.time() + 10, rpc_client.call("sum", 1, 2))
         ret = yield rpc_client.call("sum", 1, 2)
     print('async_coroutine: %d op/s' % (num_of_test / (time.clock() - time_start)))
+    io_loop.stop()
+    sp.terminate()
 
 
 if __name__ == '__main__':
@@ -63,9 +65,9 @@ if __name__ == '__main__':
     io_loop = ioloop.IOLoop.instance()
     rpc_client = RPCClient(rpc_address)
 
-    # async_coroutine()
+    async_coroutine()
 
-    rpc_client.call("sum", 1, 2, callback=async_callback)
+    # rpc_client.call("sum", 1, 2, callback=async_callback)
 
     try:
         io_loop.start()

@@ -92,12 +92,3 @@ def build_listener(address, backlog=0):
         return bind_tcp_listener(address, backlog)
 
     raise Exception("address not correct")
-
-
-def set_keepalive(sock, after_idle_sec=1, interval_sec=3, max_fails=5):
-    if os.name == 'nt':
-        return
-    sock.setsockopt(socket.SOLsocket, socket.SO_KEEPALIVE, 1)
-    sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, after_idle_sec)
-    sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, interval_sec)
-    sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, max_fails)

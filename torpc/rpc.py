@@ -8,11 +8,11 @@ import traceback
 
 import msgpack as packer
 
-from tornado.concurrent import TracebackFuture
+from tornado.concurrent import Future
 
 from services import Services
 from torpc.tcp import TcpServer, Connection
-from torpc.util import set_keepalive, auto_build_socket
+from torpc.util import auto_build_socket
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +36,10 @@ class RPCServerError(Exception):
     pass
 
 
+class RPCRegisterError(Exception):
+    pass
+
+
 class RPCTimeOutError(Exception):
     pass
 
@@ -43,7 +47,7 @@ class RPCTimeOutError(Exception):
 class RPCConnection(Connection):
     __slots__ = ('_buff', '_generator', '_request_table', '_request_timeout', 'service')
 
-    def __init__(self, connection, service=None, request_timeout=0):
+    def __init__(self, connection, service=None, request_timeout=0, **kwargs):
         self._buff = ''
         self._generator = _IDGenerator()
         self._request_table = {}
@@ -53,52 +57,50 @@ class RPCConnection(Connection):
 
     def result_callback(self, msg_id, future):
         result = future.result()
-        buff = packer.dumps((None, result))
-        self.write(struct.pack('!ibi', len(buff), RPC_RESPONSE, msg_id) + buff)
+        buf = self._pack_response(msg_id, RPC_RESPONSE, None, result)
+        self.write(buf)
 
     def handle_rpc_request(self, msg_id, method_name, *args):
         try:
             result = self.service.call(method_name, *args)
         except Exception, e:
             err = str(traceback.format_exc())
-            buff = packer.dumps((err, None))
-            self.write(struct.pack('!ibi', len(buff), RPC_RESPONSE, msg_id) + buff)
+            buf = self._pack_response(msg_id, RPC_RESPONSE, err, None)
+            self.write(buf)
         else:
-
-            if isinstance(result, TracebackFuture):
+            if isinstance(result, Future):
                 cb = functools.partial(self.result_callback, msg_id)
                 result.add_done_callback(cb)
             else:
-                buff = packer.dumps((None, result))
-                self.write(struct.pack('!ibi', len(buff), RPC_RESPONSE, msg_id) + buff)
+                buf = self._pack_response(msg_id, RPC_RESPONSE, None, result)
+                self.write(buf)
 
     def handle_rpc_notice(self, msg_id, method_name, args):
         try:
             self.service.call(method_name, *args)
         except Exception, e:
-            logger.error(str(e))
+            logger.error("call %s error in handle_rpc_notice:%s" % (method_name, str(e)))
 
     def handle_rpc_register(self, msg_id, method_name, args):
         try:
             result = self.service.call(method_name, self, args)
         except Exception, e:
             err = str(traceback.format_exc())
-            buff = packer.dumps((err, None))
-            self.write(struct.pack('!ibi', len(buff), RPC_RESPONSE, msg_id) + buff)
+            buf = self._pack_response(msg_id, RPC_RESPONSE, err, None)
+            self.write(buf)
         else:
-            if isinstance(result, TracebackFuture):
+            if isinstance(result, Future):
                 cb = functools.partial(self.result_callback, msg_id)
                 result.add_done_callback(cb)
             else:
-                buff = packer.dumps((None, result))
-                self.write(struct.pack('!ibi', len(buff), RPC_RESPONSE, msg_id) + buff)
+                buf = self._pack_response(msg_id, RPC_RESPONSE, None, result)
+                self.write(buf)
 
     def handle_rpc_response(self, msg_id, err, ret):
         if msg_id not in self._request_table:
             logger.debug('response time out?')
             return
         if err:
-            logger.debug('{0} {1} {2}'.format(msg_id, err, ret))
             raise RPCServerError(err)
 
         future = self._request_table.pop(msg_id)
@@ -156,10 +158,8 @@ class RPCConnection(Connection):
     def call(self, method_name, *arg, **kwargs):
         _callback = kwargs.get('callback')
         msg_id = next(self._generator)
-        request = packer.dumps((method_name, arg))
-        buff = struct.pack('!ibi', len(request), RPC_REQUEST, msg_id) + request
-
-        future = TracebackFuture()
+        buff = self._pack_request(msg_id, RPC_REQUEST, method_name, arg)
+        future = Future()
         self.add_request_table(msg_id, future)
 
         if _callback:
@@ -168,20 +168,18 @@ class RPCConnection(Connection):
         return future
 
     def notice(self, method_name, *arg):
-        msgid = next(self._generator)
-        request = packer.dumps((method_name, arg))
-        buff = struct.pack('!ibi', len(request), RPC_REQUEST, msgid) + request
-        self.write(buff)
+        msg_id = next(self._generator)
+        buf = self._pack_request(msg_id, RPC_NOTICE, method_name, arg)
+        self.write(buf)
 
     def register(self, name, callback=None):
         msg_id = next(self._generator)
-        request = packer.dumps(('register', name))
-        buff = struct.pack('!ibi', len(request), RPC_REGISTER, msg_id) + request
-        future = TracebackFuture()
+        buf = self._pack_request(msg_id, RPC_REGISTER, 'register', (name))
+        future = Future()
         if callback:
             future.add_done_callback(callback)
         self.add_request_table(msg_id, future)
-        self.write(buff)
+        self.write(buf)
         return future
 
     def message_timeout_cb(self, msg_id):
@@ -191,22 +189,28 @@ class RPCConnection(Connection):
         self._request_table.pop(msg_id)
         raise RPCTimeOutError(msg_id)
 
+    def _pack_request(self, msg_id, msg_type, method_name, arg):
+        """
+        !ibi: data_length, msg_type, msg_id
+        data_length = len(buf)
+        """
+        buf = packer.dumps((method_name, arg))
+        return struct.pack('!ibi', len(buf), msg_type, msg_id) + buf
+
+    def _pack_response(self, msg_id, msg_type, err, result):
+        buf = packer.dumps((err, result))
+        return struct.pack('!ibi', len(buf), msg_type, msg_id) + buf
+
 
 class RPCServer(TcpServer):
-    def __init__(self, address, service_cls=None, set_keep_alive=False, request_timeout=0):
+    def __init__(self, address, service_cls=None, request_timeout=0):
         if callable(service_cls):
             self.service = service_cls()
         else:
             self.service = Services()
-        TcpServer.__init__(self, address, RPCConnection, set_keep_alive, request_timeout=request_timeout)
+        TcpServer.__init__(self, address, RPCConnection, request_timeout=request_timeout)
 
     def _handle_connect(self, sock):
-        sock.setblocking(0)
-
-        # set keepalive
-        if self._set_keep_alive:
-            set_keepalive(sock)
-
         conn = self._build_class(sock, self.service, **self._build_kwargs)
         self.on_connect(conn)
 
@@ -229,9 +233,12 @@ class RPCClient(object):
 
         sock = auto_build_socket(address)
 
-        self._conn = RPCConnection(sock, self.service, request_timeout)
+        self._conn = RPCConnection(sock, self.service, request_timeout=request_timeout)
         self._conn.set_close_callback(self.on_closed)
         self._conn.connect(address, self.on_connected)
+
+        if self.rpc_name:
+            self._conn.register(self.rpc_name, self._register_callback)
 
     def call(self, method_name, *arg, **kwargs):
         return self._conn.call(method_name, *arg, **kwargs)
@@ -240,14 +247,13 @@ class RPCClient(object):
         return self._conn.notice(method_name, *arg)
 
     def on_connected(self):
-        if self.rpc_name:
-            self._conn.register(self.rpc_name, self._register_callback)
+        logger.debug('on_connected')
 
     def _register_callback(self, future):
         ret = future.result()
         if not ret:
             logger.warning("register failed")
-            return
+            raise RPCRegisterError(self.rpc_name)
         self.on_registered(ret)
 
     def on_registered(self, ret):
@@ -262,11 +268,10 @@ class RPCClient(object):
 
 
 class DuplexRPCServer(RPCServer):
-    def __init__(self, address, service_cls=None, set_keep_alive=False, request_timeout=0):
+    def __init__(self, address, service_cls=None, **kwargs):
         self.rpc_clients = {}
-        RPCServer.__init__(self, address, service_cls=service_cls, set_keep_alive=set_keep_alive,
-                           request_timeout=request_timeout)
-        self.service.dispatch('register', self._rpc_register)
+        RPCServer.__init__(self, address, service_cls=service_cls, **kwargs)
+        self.service.dispatch('register', self._handle_rpc_register)
         self.service.dispatch('call_node', self.call_node)
 
     def on_close(self, conn):
@@ -286,7 +291,7 @@ class DuplexRPCServer(RPCServer):
         future = node.call(method_name, *arg)
         return future
 
-    def _rpc_register(self, conn, name):
+    def _handle_rpc_register(self, conn, name):
         if name in self.rpc_clients:
             logger.warning('%s already register' % name)
             return False
