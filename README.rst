@@ -62,21 +62,18 @@ Performance
 | Memory: 8 GB 1600 MHz DDR3
 | Python: 2.7.10
 | PyPy: 4.0.0
-| UDS = use Unix Domain Socket.
 
-+-------------+----------------+---------------+
-| environment | coroutine(QPS) | callback(QPS) |
-+=============+================+===============+
-| Python      | 12870          | 16025         |
-+-------------+----------------+---------------+
-| Python(UDS) | 14771          | 19685         |
-+-------------+----------------+---------------+
-| PyPy        | 53032          | 58002         |
-+-------------+----------------+---------------+
-| PyPy(UDS)   | 71519          | 78865         |
-+-------------+----------------+---------------+
+========= ========= =========
+ Clients   CPython   PyPy
+--------- --------- ---------
+ 1         9031      32482
+--------- --------- ---------
+ 2         16386     64467
+--------- --------- ---------
+ 3         20377     80604
+========= ========= =========
 
-In this benchmark, Python loops 100k times and PyPy loops 1000k times,
+In this benchmark, Python loops 100k times and PyPy loops 500k times,
 then run 3 times of each, the result is on `gist:benchmark\_result.txt`_
 
 Document
