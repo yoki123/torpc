@@ -20,10 +20,4 @@ if __name__ == '__main__':
         return 'pong from rpc client1'
 
 
-    io_loop = ioloop.IOLoop.instance()
-
-    try:
-        io_loop.start()
-    except KeyboardInterrupt:
-        io_loop.stop()
-        print "exited cleanly"
+    io_loop = ioloop.IOLoop.instance().start()

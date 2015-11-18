@@ -10,7 +10,7 @@ import msgpack as packer
 
 from tornado.concurrent import Future
 
-from services import Services
+from torpc.services import Services
 from torpc.tcp import TcpServer, Connection
 from torpc.util import auto_build_socket
 
@@ -63,7 +63,7 @@ class RPCConnection(Connection):
     def handle_rpc_request(self, msg_id, method_name, *args):
         try:
             result = self.service.call(method_name, *args)
-        except Exception, e:
+        except Exception:
             err = str(traceback.format_exc())
             buf = self._pack_response(msg_id, RPC_RESPONSE, err, None)
             self.write(buf)
@@ -78,13 +78,13 @@ class RPCConnection(Connection):
     def handle_rpc_notice(self, msg_id, method_name, args):
         try:
             self.service.call(method_name, *args)
-        except Exception, e:
+        except Exception as e:
             logger.error("call %s error in handle_rpc_notice:%s" % (method_name, str(e)))
 
     def handle_rpc_register(self, msg_id, method_name, args):
         try:
             result = self.service.call(method_name, self, args)
-        except Exception, e:
+        except Exception:
             err = str(traceback.format_exc())
             buf = self._pack_response(msg_id, RPC_RESPONSE, err, None)
             self.write(buf)
@@ -128,7 +128,7 @@ class RPCConnection(Connection):
 
                 try:
                     req = packer.loads(request)
-                except Exception, e:
+                except Exception as e:
                     logger.debug(str(e))
                     return
 
@@ -184,7 +184,7 @@ class RPCConnection(Connection):
 
     def message_timeout_cb(self, msg_id):
         if msg_id not in self._request_table:
-            logger.debug('not exsit, timeout?')
+            logger.debug('not exist, timeout?')
             return
         self._request_table.pop(msg_id)
         raise RPCTimeOutError(msg_id)
@@ -261,7 +261,6 @@ class RPCClient(object):
 
     def on_closed(self):
         logger.debug('on_closed')
-        self._conn.io_loop.stop()
 
     def close(self):
         self._conn.close()

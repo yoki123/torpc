@@ -17,15 +17,15 @@ class Services(object):
         self._targets[key] = func
 
     def register(self, command=0):
-        def decorator(f):
+        def decorator(func):
             if command:
                 _key = command
             else:
-                _key = f.__name__
+                _key = func.__name__
             if _key in self._targets:
                 raise KeyError(_key)
-            self._targets[_key] = f
-            return f
+            self._targets[_key] = func
+            return func
 
         return decorator
 

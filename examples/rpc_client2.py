@@ -30,9 +30,4 @@ if __name__ == '__main__':
     rpc_client = RPCClient(('127.0.0.1', 5000), 'client2')
     test_rpc()
 
-    io_loop = ioloop.IOLoop.instance()
-    try:
-        io_loop.start()
-    except KeyboardInterrupt:
-        io_loop.stop()
-        print "exited cleanly"
+    ioloop.IOLoop.instance().start()

@@ -32,9 +32,5 @@ if __name__ == '__main__':
     client.start()
 
     io_loop = ioloop.IOLoop.instance()
+    io_loop.start()
 
-    try:
-        io_loop.start()
-    except KeyboardInterrupt:
-        io_loop.stop()
-        print "exited cleanly"

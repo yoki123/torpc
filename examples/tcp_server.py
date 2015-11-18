@@ -25,9 +25,4 @@ if __name__ == '__main__':
     server = EchoServer(('127.0.0.1', 5000), Connection)
     server.start()
 
-    io_loop = ioloop.IOLoop.instance()
-    try:
-        io_loop.start()
-    except KeyboardInterrupt:
-        io_loop.stop()
-        print "exited cleanly"
+    ioloop.IOLoop.instance().start()

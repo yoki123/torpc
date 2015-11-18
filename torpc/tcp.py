@@ -90,10 +90,10 @@ class Connection(object):
                 self._connect_callback()
             self._is_connecting = False
 
-        if events & self.io_loop.READ:
+        if events & READ_EVENT:
             try:
                 _buf = self.socket.recv(self._read_size)
-                if len(_buf) > 0:
+                if _buf:
                     self._handle_read(_buf)
                 else:
                     return self.close()
@@ -103,7 +103,7 @@ class Connection(object):
                     logger.debug(str(e))
                     return self.close()
 
-        if events & self.io_loop.WRITE:
+        if events & WRITE_EVENT:
             while self._write_buffer:
                 _send_buf = self._write_buffer.popleft()
                 try:
@@ -119,14 +119,13 @@ class Connection(object):
                     if sent < len(_send_buf):
                         self._write_buffer.appendleft(_send_buf)
 
-            # Buf if not calling _update_event_handler.
+            # Buf if not calling _update_event_handler?
             if not self._write_buffer:
                 self._update_event_handler(write=False)
 
-        if events & self.io_loop.ERROR:
+        if events & ERROR_EVENT:
             err = self.socket.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR)
-            logger.warning(str(err))
-            logger.debug("ERROR !!!")
+            logger.debug("Error in event loop!: %s" % str(err))
             self.close()
 
     def close(self):
@@ -136,6 +135,7 @@ class Connection(object):
         self.socket.close()
         self._is_closed = True
         self.socket = None
+        self._listened_events = 0
 
         if self._close_callback:
             self._close_callback()
@@ -191,7 +191,7 @@ class TcpServer(object):
         while True:
             try:
                 connection, address = sock.accept()
-            except socket.error, e:
+            except socket.error as e:
                 if e[0] not in _ERRNO_WOULDBLOCK:
                     raise
                 return
@@ -206,11 +206,12 @@ class TcpServer(object):
         conn.set_close_callback(close_callback)
 
     def start(self, backlog=0):
-        sock = build_listener(self._address, backlog=backlog)
+        socks = build_listener(self._address, backlog=backlog)
 
         io_loop = ioloop.IOLoop.instance()
-        callback = functools.partial(self._accept_handler, sock)
-        io_loop.add_handler(sock.fileno(), callback, WRITE_EVENT | READ_EVENT | ERROR_EVENT)
+        for sock in socks:
+            callback = functools.partial(self._accept_handler, sock)
+            io_loop.add_handler(sock.fileno(), callback, WRITE_EVENT | READ_EVENT | ERROR_EVENT)
 
     def handle_stream(self, conn, buff):
         logger.debug('handle_stream')
