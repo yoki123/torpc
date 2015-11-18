@@ -72,7 +72,7 @@ Performance
 ========= ============== ==========
 
 这个基准测试中，Python循环10w次，PyPy循环50w次，然后运行3次, 结果在
-`gist:benchmark\_result.txt`_
+`gist:benchmark\_result.txt`_，另一个Python基于Python的测试在 `BENCHMARK.rst`_
 
 文档
 ~~~~
@@ -82,3 +82,4 @@ Performance
 .. _examples: https://github.com/yoki123/torpc/tree/master/examples
 .. _`gist:benchmark\_result.txt`: https://gist.github.com/yoki123/c6f8a9c4f375f61359e2
 .. _English: https://github.com/yoki123/torpc/blob/master/README.rst
+.. _BENCHMARK.rst: https://github.com/yoki123/torpc/blob/master/examples/BENCHMARK.rst

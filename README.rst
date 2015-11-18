@@ -74,7 +74,8 @@ Performance
 ========= ============== ==========
 
 In this benchmark, Python loops 100k times and PyPy loops 500k times,
-then run 3 times of each, the result is on `gist:benchmark\_result.txt`_
+then run 3 times of each, the result is on `gist:benchmark\_result.txt`_,
+Another benchmark for python is on `BENCHMARK.rst`_.
 
 Document
 ~~~~~~~~
@@ -84,3 +85,4 @@ Document
 .. _examples: https://github.com/yoki123/torpc/tree/master/examples
 .. _`gist:benchmark\_result.txt`: https://gist.github.com/yoki123/c6f8a9c4f375f61359e2
 .. _中文: https://github.com/yoki123/torpc/blob/master/README-zh.rst
+.. _BENCHMARK.rst: https://github.com/yoki123/torpc/blob/master/examples/BENCHMARK.rst
