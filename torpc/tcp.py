@@ -7,6 +7,7 @@ import functools
 import logging
 
 from tornado import ioloop
+from tornado.iostream import errno_from_exception
 
 from torpc.util import auto_build_socket, build_listener
 
@@ -99,7 +100,7 @@ class Connection(object):
                     return self.close()
 
             except socket.error as e:
-                if e.args[0] not in _ERRNO_WOULDBLOCK:
+                if errno_from_exception(e) not in _ERRNO_WOULDBLOCK:
                     logger.debug(str(e))
                     return self.close()
 
@@ -109,7 +110,7 @@ class Connection(object):
                 try:
                     sent = self.socket.send(_send_buf)
                 except (socket.error, IOError, OSError) as e:
-                    if e.args[0] in _ERRNO_WOULDBLOCK:
+                    if errno_from_exception(e) in _ERRNO_WOULDBLOCK:
                         logger.debug("write would block")
                         self._write_buffer.appendleft(_send_buf)
                         break
@@ -148,7 +149,8 @@ class Connection(object):
         try:
             self.socket.connect(address)
         except socket.error as e:
-            if e.args[0] not in _ERRNO_WOULDBLOCK and e.args[0] not in _ERRNO_INPROGRESS:
+            err = errno_from_exception(e)
+            if err not in _ERRNO_WOULDBLOCK and err not in _ERRNO_INPROGRESS:
                 logger.debug(str(e))
                 self.close()
 
@@ -192,7 +194,7 @@ class TcpServer(object):
             try:
                 connection, address = sock.accept()
             except socket.error as e:
-                if e[0] not in _ERRNO_WOULDBLOCK:
+                if errno_from_exception(e) not in _ERRNO_WOULDBLOCK:
                     raise
                 return
 

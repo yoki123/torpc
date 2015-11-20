@@ -1,15 +1,17 @@
 ToRPC
 =====
 
-ToRPC(Tornado + RPC) 是一个的基于Tornado
-IOLoop的异步TCP和双向通信的RPC的Python实现。ToRPC非常轻量级，性能优秀（尤其是在PyPy环境下）。
+ToRPC(Tornado + RPC) is a tiny tcp and duplex RPC implementation in
+Python based on Tornado IOLoop. It’s very lightweight and high
+performance(especially on PyPy).
 
-注意：目前为止，ToRPC只在\ ``CPython 2.7+`` 和 ``PyPy 2.5+``\ 上测试过。
+Warning: ToRPC was only tested on ``CPython 2.7+`` and ``PyPy 2.5+``
+until now. Don't use in Product, because this isn't stable now.
 
-示例
--------
+Examples
+--------
 
-RPC 服务器
+RPC server
 ~~~~~~~~~~
 
 .. code:: python
@@ -25,7 +27,7 @@ RPC 服务器
     server.start()
     ioloop.IOLoop.instance().start()
 
-RPC 客户端
+RPC client
 ~~~~~~~~~~
 
 .. code:: python
@@ -50,14 +52,14 @@ RPC 客户端
     using_gen_style()
     ioloop.IOLoop.instance().start()
 
-更多请浏览\ `examples`_\ 。
+See more in `examples`_.
 
 Performance
 ~~~~~~~~~~~
 
-| 系统: CentOS 6.6 x64
-| 处理器: Intel i5-3470 3.20GHz
-| 内存: 8 GB 1600 MHz DDR3
+| OS: CentOS 6.6 x64
+| CPU: Intel i5-3470 3.20GHz
+| Memory: 8 GB 1600 MHz DDR3
 | Python: 2.7.10
 | PyPy: 4.0.0
 
@@ -71,15 +73,11 @@ Performance
  3         20377          80604
 ========= ============== ==========
 
-这个基准测试中，Python循环10w次，PyPy循环50w次，然后运行3次, 结果在
-`gist:benchmark\_result.txt`_，另一个Python基于Python的测试在 `BENCHMARK.rst`_
+In this benchmark, Python loops 100k times and PyPy loops 500k times,
+then run 3 times of each, the result is on `gist:benchmark\_result.txt`_,
+Another benchmark for python is on `BENCHMARK.rst`_.
 
-文档
-~~~~
-
-`English`_
 
 .. _examples: https://github.com/yoki123/torpc/tree/master/examples
 .. _`gist:benchmark\_result.txt`: https://gist.github.com/yoki123/c6f8a9c4f375f61359e2
-.. _English: https://github.com/yoki123/torpc/blob/master/README.rst
 .. _BENCHMARK.rst: https://github.com/yoki123/torpc/blob/master/examples/BENCHMARK.rst
