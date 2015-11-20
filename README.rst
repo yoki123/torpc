@@ -82,6 +82,6 @@ Links
 
 .. _examples: https://github.com/yoki123/torpc/tree/master/examples
 .. _`gist:benchmark\_result.txt`: https://gist.github.com/yoki123/c6f8a9c4f375f61359e2
-.. _English: https://github.com/yoki123/torpc/blob/master/README.rst
+.. _English: https://github.com/yoki123/torpc/blob/master/README-en.rst
 .. _BENCHMARK.rst: https://github.com/yoki123/torpc/blob/master/examples/BENCHMARK.rst
 .. _`ToRPC：一个双向RPC的Python实现`: http://i.cyanme.com/2015/11/07/a-duplex-rpc-implementation/
