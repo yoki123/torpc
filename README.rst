@@ -4,6 +4,8 @@ ToRPC
 ToRPC(Tornado + RPC) 是一个的基于Tornado
 IOLoop的异步TCP和双向通信的RPC的Python实现。ToRPC非常轻量级，性能优秀（尤其是在PyPy环境下）。
 
+torpc-gevent是另一个用Gevent实现的版本:https://github.com/yoki123/torpc-gevent。
+
 提醒：目前为止，ToRPC只在\ ``CPython 2.7+`` 和 ``PyPy 2.5+``\ 上测试过，不要在产品中使用，现在还不稳定。
 
 示例
@@ -72,7 +74,7 @@ Performance
 ========= ============== ==========
 
 这个基准测试中，Python循环10w次，PyPy循环50w次，然后运行3次, 结果在
-`gist:benchmark\_result.txt`_，另一个Python基于Python的测试在 `BENCHMARK.rst`_
+`gist:benchmark\_result.txt`_，另一个基于Python的测试在 `BENCHMARK.rst`_
 
 Links
 ~~~~~
