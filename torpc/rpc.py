@@ -152,7 +152,7 @@ class RPCConnection(Connection):
 
     def add_request_table(self, msg_id, future):
         if self._request_timeout:
-            self.io_loop.add_timeout(time.time() + self._request_timeout, self.message_timeout_cb, future)
+            self.io_loop.add_timeout(time.time() + self._request_timeout, self.message_timeout_cb, msg_id)
         self._request_table[msg_id] = future
 
     def call(self, method_name, *arg, **kwargs):
